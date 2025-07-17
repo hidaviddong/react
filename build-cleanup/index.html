@@ -1,0 +1,14 @@
+<html>
+  <body>
+    <div id="container"></div>
+    <script type="module">
+      import * as React from './react.development.js';
+      import * as ReactDOMClient from './react-dom-client.development.js';
+      
+      const createRoot = ReactDOMClient.createRoot;
+      const root = createRoot(document.getElementById('container'));
+      const h1 = React.createElement('h1', null, 'Hello World!');
+      root.render(h1);
+    </script>
+  </body>
+</html>

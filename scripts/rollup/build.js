@@ -640,10 +640,12 @@ function resolveEntryFork(resolvedEntry, isFBBundle, isDev) {
 }
 
 async function createBundle(bundle, bundleType) {
+  bundleType = "ESM_DEV";
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
+  console.log("format是",format,"bundleType",bundleType)
   const packageName = Packaging.getPackageName(bundle.entry);
 
   const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
@@ -655,6 +657,7 @@ async function createBundle(bundle, bundleType) {
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
+  console.log("peerGlobals", peerGlobals)
   let externals = Object.keys(peerGlobals);
 
   const deps = Modules.getDependencies(bundleType, bundle.entry);
@@ -705,10 +708,11 @@ async function createBundle(bundle, bundleType) {
       bundle
     ),
     output: {
-      externalLiveBindings: false,
-      freeze: false,
-      interop: getRollupInteropValue,
-      esModule: false,
+      // externalLiveBindings: false,
+      // freeze: false,
+      // interop: getRollupInteropValue,
+      interop: false,
+      esModule: true,
     },
   };
   const mainOutputPath = Packaging.getBundleOutputPath(
@@ -717,6 +721,7 @@ async function createBundle(bundle, bundleType) {
     filename,
     packageName
   );
+  console.log("mainOutputPath", mainOutputPath)
 
   const rollupOutputOptions = getRollupOutputOptions(
     mainOutputPath,
@@ -725,6 +730,12 @@ async function createBundle(bundle, bundleType) {
     bundle.global,
     bundleType
   );
+
+  // rollupOutputOptions.globals = {
+  //   ...rollupOutputOptions.globals,
+  //   'scheduler': 'Scheduler'
+  // };
+  // console.log("rollupOutputOptions", rollupOutputOptions.globals)
 
   if (isWatchMode) {
     rollupConfig.output = [rollupOutputOptions];

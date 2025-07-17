@@ -46,7 +46,8 @@
     "unstable_testing.js",
     "unstable_testing.react-server.js",
     "unstable_server-external-runtime.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "exports": {
     ".": {

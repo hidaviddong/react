@@ -93,7 +93,7 @@ async function processArtifact(artifact, commit, releaseChannel) {
   if (!existsSync(join(cwd, 'build'))) {
     await exec(`mkdir ./build`, {cwd});
   } else {
-    await exec(`rm -rf ./build/node_modules`, {cwd});
+    // await exec(`rm -rf ./build/node_modules`, {cwd});
   }
   let sourceDir;
   // TODO: Rename release channel to `next`

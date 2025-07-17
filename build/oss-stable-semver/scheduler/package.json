@@ -22,6 +22,7 @@
     "index.native.js",
     "unstable_mock.js",
     "unstable_post_task.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ]
 }

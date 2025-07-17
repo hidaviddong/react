@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "0.0.0-experimental-144de20e-20250717",
+  "version": "0.0.0-experimental-bd8cd8af-20250717",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -17,10 +17,10 @@
   },
   "homepage": "https://react.dev/",
   "dependencies": {
-    "scheduler": "0.0.0-experimental-144de20e-20250717"
+    "scheduler": "0.0.0-experimental-bd8cd8af-20250717"
   },
   "peerDependencies": {
-    "react": "0.0.0-experimental-144de20e-20250717"
+    "react": "0.0.0-experimental-bd8cd8af-20250717"
   },
   "files": [
     "LICENSE",
@@ -46,7 +46,8 @@
     "unstable_testing.js",
     "unstable_testing.react-server.js",
     "unstable_server-external-runtime.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "exports": {
     ".": {

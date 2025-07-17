@@ -43,7 +43,8 @@
     "static.node.js",
     "static.react-server.js",
     "test-utils.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ],
   "exports": {
     ".": {

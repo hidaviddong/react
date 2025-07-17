@@ -13,6 +13,7 @@
     "README.md",
     "index.js",
     "cjs/",
+    "esm/",
     "compiler-runtime.js",
     "jsx-runtime.js",
     "jsx-runtime.react-server.js",

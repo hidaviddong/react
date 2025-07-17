@@ -1,6 +1,6 @@
 {
   "name": "scheduler",
-  "version": "0.26.0-canary-144de20e-20250717",
+  "version": "0.26.0-canary-bd8cd8af-20250717",
   "description": "Cooperative scheduler for the browser environment.",
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "index.native.js",
     "unstable_mock.js",
     "unstable_post_task.js",
-    "cjs/"
+    "cjs/",
+    "esm/"
   ]
 }

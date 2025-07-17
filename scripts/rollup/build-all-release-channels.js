@@ -354,15 +354,15 @@ function processExperimental(buildDir, version) {
   // duplicates of the corresponding artifacts in the stable channel. Ideally,
   // the underlying build script should not have produced these files in the
   // first place.
-  for (const pathName of fs.readdirSync(buildDir)) {
-    if (
-      pathName !== 'oss-experimental' &&
-      pathName !== 'facebook-www' &&
-      pathName !== 'sizes-experimental'
-    ) {
-      spawnSync('rm', ['-rm', buildDir + '/' + pathName]);
-    }
-  }
+  // for (const pathName of fs.readdirSync(buildDir)) {
+  //   if (
+  //     pathName !== 'oss-experimental' &&
+  //     pathName !== 'facebook-www' &&
+  //     pathName !== 'sizes-experimental'
+  //   ) {
+  //     spawnSync('rm', ['-rm', buildDir + '/' + pathName]);
+  //   }
+  // }
 }
 
 function crossDeviceRenameSync(source, destination) {

@@ -1,0 +1,2 @@
+- UMD: react-dom.development and react.development
+- ES

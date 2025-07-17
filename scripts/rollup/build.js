@@ -154,7 +154,7 @@ function getBabelConfig(
     presets: [],
     plugins: [...babelPlugins],
     babelHelpers: 'bundled',
-    sourcemap: false,
+    sourcemap: true,
   };
   if (isDevelopment) {
     options.plugins.push(...babelToES5Plugins);
@@ -216,7 +216,7 @@ function getRollupOutputOptions(
     freeze: !isProduction,
     interop: getRollupInteropValue,
     name: globalName,
-    sourcemap: false,
+    sourcemap: true,
     esModule: false,
     exports: 'auto',
   };
@@ -389,7 +389,7 @@ function getPlugins(
               const transformed = flowRemoveTypes(code);
               return {
                 code: transformed.toString(),
-                map: null,
+                map: null, // Let Rollup handle sourcemap chain
               };
             },
           },
@@ -420,11 +420,16 @@ function getPlugins(
       // Remove 'use strict' from individual source files. We skip eslint-plugin-react-hooks because
       // it bundles compiler-type code that may examine "use strict" used outside of a directive
       // context, e.g. as a StringLiteral.
-      bundle.name !== 'eslint-plugin-react-hooks'
+      // Temporarily disabled when sourcemaps are enabled to avoid sourcemap issues
+      false && bundle.name !== 'eslint-plugin-react-hooks'
         ? {
             name: "remove 'use strict'",
-            transform(source) {
-              return source.replace(/['"]use strict["']/g, '');
+            transform(source, id) {
+              const newSource = source.replace(/['"]use strict["']/g, '');
+              return {
+                code: newSource,
+                map: null, // Let Rollup handle sourcemap chain
+              };
             },
           }
         : false,
@@ -443,7 +448,7 @@ function getPlugins(
       {
         name: 'top-level-definitions',
         renderChunk(source) {
-          return Wrappers.wrapWithTopLevelDefinitions(
+          const wrappedSource = Wrappers.wrapWithTopLevelDefinitions(
             source,
             bundleType,
             globalName,
@@ -451,6 +456,10 @@ function getPlugins(
             moduleType,
             bundle.wrapWithModuleBoundaries
           );
+          return {
+            code: wrappedSource,
+            map: null // Let Rollup handle sourcemap chain
+          };
         },
       },
       // For production builds, compile with Closure. We do this even for the
@@ -464,39 +473,39 @@ function getPlugins(
       // We don't bother with sourcemaps at this step. The sourcemaps we publish
       // are only for whitespace and symbol renaming; they don't map back to
       // before Closure was applied.
-      needsMinifiedByClosure &&
-        closure({
-          compilation_level: 'SIMPLE',
-          language_in: 'ECMASCRIPT_2020',
-          language_out:
-            bundleType === NODE_ES2015
-              ? 'ECMASCRIPT_2020'
-              : bundleType === BROWSER_SCRIPT
-                ? 'ECMASCRIPT5'
-                : 'ECMASCRIPT5_STRICT',
-          emit_use_strict:
-            bundleType !== BROWSER_SCRIPT &&
-            bundleType !== ESM_PROD &&
-            bundleType !== ESM_DEV,
-          env: 'CUSTOM',
-          warning_level: 'QUIET',
-          source_map_include_content: true,
-          use_types_for_optimization: false,
-          process_common_js_modules: false,
-          rewrite_polyfills: false,
-          inject_libraries: false,
-          allow_dynamic_import: true,
+      // needsMinifiedByClosure &&
+      //   closure({
+      //     compilation_level: 'SIMPLE',
+      //     language_in: 'ECMASCRIPT_2020',
+      //     language_out:
+      //       bundleType === NODE_ES2015
+      //         ? 'ECMASCRIPT_2020'
+      //         : bundleType === BROWSER_SCRIPT
+      //           ? 'ECMASCRIPT5'
+      //           : 'ECMASCRIPT5_STRICT',
+      //     emit_use_strict:
+      //       bundleType !== BROWSER_SCRIPT &&
+      //       bundleType !== ESM_PROD &&
+      //       bundleType !== ESM_DEV,
+      //     env: 'CUSTOM',
+      //     warning_level: 'QUIET',
+      //     source_map_include_content: true,
+      //     use_types_for_optimization: false,
+      //     process_common_js_modules: false,
+      //     rewrite_polyfills: false,
+      //     inject_libraries: false,
+      //     allow_dynamic_import: true,
 
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: true,
+      //     // Don't let it create global variables in the browser.
+      //     // https://github.com/facebook/react/issues/10909
+      //     assume_function_wrapper: true,
 
-          // Don't rename symbols (variable names, functions, etc). We leave
-          // this up to the application to handle, if they want. Otherwise gzip
-          // takes care of it.
-          renaming: false,
-        }),
-      needsMinifiedByClosure &&
+      //     // Don't rename symbols (variable names, functions, etc). We leave
+      //     // this up to the application to handle, if they want. Otherwise gzip
+      //     // takes care of it.
+      //     renaming: false,
+      //   }),
+      needsMinifiedByClosure && false &&
         // Add the whitespace back
         prettier({
           parser: 'flow',
@@ -504,36 +513,36 @@ function getPlugins(
           trailingComma: 'none',
           bracketSpacing: true,
         }),
-      {
-        name: 'license-and-signature-header',
-        renderChunk(source) {
-          return Wrappers.wrapWithLicenseHeader(
-            source,
-            bundleType,
-            globalName,
-            filename,
-            moduleType
-          );
-        },
-      },
+      // {
+      //   name: 'license-and-signature-header',
+      //   renderChunk(source) {
+      //     return Wrappers.wrapWithLicenseHeader(
+      //       source,
+      //       bundleType,
+      //       globalName,
+      //       filename,
+      //       moduleType
+      //     );
+      //   },
+      // },
       // Record bundle size.
-      sizes({
-        getSize: (size, gzip) => {
-          const currentSizes = Stats.currentBuildResults.bundleSizes;
-          const recordIndex = currentSizes.findIndex(
-            record =>
-              record.filename === filename && record.bundleType === bundleType
-          );
-          const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
-          currentSizes[index] = {
-            filename,
-            bundleType,
-            packageName,
-            size,
-            gzip,
-          };
-        },
-      }),
+      // sizes({
+      //   getSize: (size, gzip) => {
+      //     const currentSizes = Stats.currentBuildResults.bundleSizes;
+      //     const recordIndex = currentSizes.findIndex(
+      //       record =>
+      //         record.filename === filename && record.bundleType === bundleType
+      //     );
+      //     const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+      //     currentSizes[index] = {
+      //       filename,
+      //       bundleType,
+      //       packageName,
+      //       size,
+      //       gzip,
+      //     };
+      //   },
+      // }),
     ].filter(Boolean);
   } catch (error) {
     console.error(

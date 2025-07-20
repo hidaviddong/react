@@ -1750,7 +1750,6 @@ function createLaneMap(initial) {
 }
 function markRootUpdated$1(root, updateLane) {
   root.pendingLanes |= updateLane;
-
   // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
   // them again.
@@ -3147,11 +3146,13 @@ function getCurrentFiberStackInDev() {
   }
 }
 function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
+  console.log("runWithFiberInDEV",fiber,callback,arg0,arg1,arg2,arg3,arg4)
   {
     var previousFiber = current;
     setCurrentFiber(fiber);
     try {
       if (fiber !== null && fiber._debugTask) {
+        console.log("runWithFiberInDEV-----fiber",fiber)
         return fiber._debugTask.run(callback.bind(null, arg0, arg1, arg2, arg3, arg4));
       }
       return callback(arg0, arg1, arg2, arg3, arg4);
@@ -12626,6 +12627,7 @@ function commitHiddenCallbacks(updateQueue, context) {
   }
 }
 function commitCallbacks(updateQueue, context) {
+  console.log("commitCallbacks",updateQueue, context)
   var callbacks = updateQueue.callbacks;
   if (callbacks !== null) {
     updateQueue.callbacks = null;
@@ -23552,6 +23554,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent, parentFr
     if (before) {
       insertInContainerBefore(parent, stateNode, before);
     } else {
+      console.log("appendChildToContainer",parent, stateNode)
       appendChildToContainer(parent, stateNode);
     }
     // TODO: Enable HostText for RN
@@ -23585,6 +23588,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent, parentFr
   }
 }
 function insertOrAppendPlacementNode(node, before, parent, parentFragmentInstances) {
+  console.log("insertOrAppendPlacementNode",node, before, parent, parentFragmentInstances)
   var tag = node.tag;
   var isHost = tag === HostComponent || tag === HostText;
   if (isHost) {
@@ -23624,7 +23628,7 @@ function insertOrAppendPlacementNode(node, before, parent, parentFragmentInstanc
   }
 }
 function commitPlacement(finishedWork) {
-
+  console.log("commitPlacement",finishedWork)
   // Recursively insert all host nodes into the parent.
   var hostParentFiber;
   var parentFragmentInstances = null;
@@ -23655,6 +23659,7 @@ function commitPlacement(finishedWork) {
           var before = getHostSibling(finishedWork);
           // We only have the top Fiber that was inserted but we need to recurse down its
           // children to find all the terminal nodes.
+          
           insertOrAppendPlacementNode(finishedWork, before, parent, parentFragmentInstances);
           break;
         }
@@ -23690,6 +23695,7 @@ function commitPlacement(finishedWork) {
 function commitHostPlacement(finishedWork) {
   try {
     if (true) {
+      
       runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
     }
   } catch (error) {
@@ -25121,6 +25127,7 @@ function commitMutationEffects(root, finishedWork, committedLanes) {
 function recursivelyTraverseMutationEffects(root, parentFiber, lanes) {
   // Deletions effects can be scheduled on any fiber type. They need to happen
   // before the children effects have fired.
+  console.log("recursivelyTraverseMutationEffects",root, parentFiber, lanes)
   var deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (var i = 0; i < deletions.length; i++) {
@@ -25138,6 +25145,7 @@ function recursivelyTraverseMutationEffects(root, parentFiber, lanes) {
 }
 var currentHoistableRoot = null;
 function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
+  console.log("commitMutationEffectsOnFiber",finishedWork, root, lanes)
   var prevEffectStart = pushComponentEffectStart();
   var prevEffectErrors = pushComponentEffectErrors();
   var current = finishedWork.alternate;
@@ -25544,8 +25552,10 @@ function commitReconciliationEffects(finishedWork, committedLanes) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
+  console.log("commitReconciliationEffects",finishedWork, committedLanes)
   var flags = finishedWork.flags;
   if (flags & Placement) {
+    console.log("commitHostPlacement",finishedWork)
     commitHostPlacement(finishedWork);
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
@@ -28018,6 +28028,7 @@ function peekDeferredLane() {
   return workInProgressDeferredLane;
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
+  console.log("开始调度")
   {
     if (isRunningInsertionEffect) {
       console.error('useInsertionEffect must not schedule updates.');
@@ -28042,7 +28053,7 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
     var didAttemptEntireTree = false;
     markRootSuspended(root, workInProgressRootRenderLanes, workInProgressDeferredLane, didAttemptEntireTree);
   }
-
+ 
   // Mark that the root has a pending update.
   markRootUpdated(root, lane);
   if ((executionContext & RenderContext) !== NoLanes && root === workInProgressRoot) {
@@ -28078,7 +28089,9 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
         markRootSuspended(root, workInProgressRootRenderLanes, workInProgressDeferredLane, _didAttemptEntireTree);
       }
     }
+    console.log("ensureRootIsScheduled Before", root.pendingLanes,root.callbackNode,root.callbackPriority)
     ensureRootIsScheduled(root);
+    console.log("ensureRootIsScheduled After", root.pendingLanes,root.callbackNode,root.callbackPriority)
     if (lane === SyncLane && executionContext === NoContext && !disableLegacyMode && (fiber.mode & ConcurrentMode) === NoMode) {
       if (ReactSharedInternals.isBatchingLegacy) ; else {
         // Flush the synchronous work now, unless we're already working or inside
@@ -28112,6 +28125,7 @@ function isUnsafeClassRenderPhaseUpdate(fiber) {
   return (executionContext & RenderContext) !== NoContext;
 }
 function performWorkOnRoot(root, lanes, forceSync) {
+  console.log("performWorkOnRoot",root,lanes,forceSync)
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
@@ -28246,6 +28260,7 @@ function performWorkOnRoot(root, lanes, forceSync) {
 
       // We now have a consistent tree. The next step is either to commit it,
       // or, if something suspended, wait to commit it after a timeout.
+      console.log("准备commit")
       finishConcurrentRender(root, exitStatus, finishedWork, lanes, renderEndTime);
     }
     break;
@@ -28377,6 +28392,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes, renderEnd
   }
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
+    console.log("commitRoot")
     commitRoot(root, finishedWork, lanes, workInProgressRootRecoverableErrors, workInProgressTransitions, workInProgressRootDidIncludeRecursiveRenderUpdate, workInProgressDeferredLane, workInProgressRootInterleavedUpdatedLanes, workInProgressSuspendedRetryLanes, exitStatus, IMMEDIATE_COMMIT, renderStartTime, renderEndTime);
   } else {
     if (includesOnlyRetries(lanes) && (alwaysThrottleRetries )) {
@@ -28413,6 +28429,7 @@ completedRenderStartTime,
 // Profiling-only
 completedRenderEndTime // Profiling-only
 ) {
+  console.log("commitRootWhenReady")
   root.timeoutHandle = noTimeout;
 
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
@@ -29689,6 +29706,7 @@ completedRenderEndTime // Profiling-only
 ) {
   root.cancelPendingCommit = null;
   do {
+   
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
     // passive effects. So we need to keep flushing in a loop until there are
@@ -29927,6 +29945,7 @@ function flushMutationEffects() {
     executionContext |= CommitContext;
     try {
       // The next phase is the mutation phase, where we mutate the host tree.
+      console.log("commitMutationEffects")
       commitMutationEffects(root, finishedWork, lanes);
       if (enableCreateEventHandleAPI) ;
       resetAfterCommit(root.containerInfo);
@@ -30829,6 +30848,7 @@ function ensureRootIsScheduled(root) {
   // Add the root to the schedule
   if (root === lastScheduledRoot || root.next !== null) ; else {
     if (lastScheduledRoot === null) {
+      console.log("首次render触发")
       firstScheduledRoot = lastScheduledRoot = root;
     } else {
       lastScheduledRoot.next = root;
@@ -30913,9 +30933,11 @@ function processRootScheduleInImmediateTask() {
   }
   processRootScheduleInMicrotask();
 }
+
 function processRootScheduleInMicrotask() {
   // This function is always called inside a microtask. It should never be
   // called synchronously.
+  console.log("===== Step 2: 微任务阶段 =====：processRootScheduleInMicrotask")
   didScheduleMicrotask = false;
   {
     didScheduleMicrotask_act = false;
@@ -30937,8 +30959,10 @@ function processRootScheduleInMicrotask() {
   var prev = null;
   var root = firstScheduledRoot;
   while (root !== null) {
+    console.log(`[Microtask] Processing root. Before scheduling, callbackNode is:`, root.callbackNode);
     var next = root.next;
     var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
+    console.log(`[Microtask] Finished processing root. After scheduling, callbackNode is now:`, root.callbackNode);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To
       // guard against subtle reentrancy bugs, this microtask is the only place
@@ -31074,6 +31098,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   // This is the entry point for concurrent tasks scheduled via Scheduler (and
   // postTask, in the future).
+  console.log("performWorkOnRootViaSchedulerTask",root,didTimeout)
 
   {
     resetNestedUpdateFlag();
@@ -31201,6 +31226,8 @@ function scheduleImmediateRootScheduleTask() {
   // TODO: Can we land supportsMicrotasks? Which environments don't support it?
   // Alternatively, can we move this check to the host config?
   {
+    // 开启微任务
+    console.log("使用 queueMicrotask 开启微任务")
     scheduleMicrotask(function () {
       // In Safari, appending an iframe forces microtasks to run.
       // https://github.com/facebook/react/issues/22459
@@ -34789,6 +34816,7 @@ function appendChildToContainer(container, child) {
     // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
     parentNode.moveBefore(child, null);
   } else {
+    console.log("这就是我们最终到达的地方")
     parentNode.appendChild(child);
   }
 
@@ -38032,6 +38060,7 @@ function updateContainerImpl(rootFiber, lane, element, container, parentComponen
     }
     update.callback = callback;
   }
+  console.log("方便查找我看到哪儿了")
   var root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
     startUpdateTimerByLane(lane);

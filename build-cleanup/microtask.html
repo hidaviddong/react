@@ -1,0 +1,27 @@
+<html>
+  <body>
+    <div id="container"></div>
+    <script type="module">
+        function bar(){
+            let a = 0
+            for (let i = 0; i < 200000000; i++) {
+                a += i
+            }
+            return a
+        }
+        queueMicrotask(()=>{
+          bar()
+        })
+  
+        function foo(){
+          let a = 0;
+          for (let i = 0; i < 1000000000; i++) {
+            a += i;
+          }
+          return a
+        }
+        const a  = foo()
+        console.log("bar", a)
+      </script>
+  </body>
+</html>

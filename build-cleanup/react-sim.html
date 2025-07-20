@@ -1,0 +1,162 @@
+<html>
+  <body>
+    <div id="container"></div>
+    <script type="module">
+      // ===== 1. 模拟 React 的内部常量和状态 =====
+
+      const NoLane = 0;
+      const SyncLane = 1; // 假设同步优先级是1
+      const ConcurrentLane = 32; // 我们关注的并发优先级
+
+      // 模拟全局状态，实际 React 中更复杂
+      let root = null;
+
+
+      // ===== 2. 模拟 Scheduler (调度器) 模块 =====
+      // 这是一个独立的模块，专门负责和浏览器"预约"时间
+
+      const Scheduler = {
+        // scheduleCallback 的作用就是和浏览器预约一个未来的任务
+        // 我们用 setTimeout(..., 0) 来模拟 postMessage 的效果，因为它会创建一个新的宏任务
+        scheduleCallback: (priority, callback) => {
+          console.log(`%c[Scheduler]`, 'color: blue', `收到一个优先级为 ${priority} 的预约请求。`);
+          console.log(`%c[Scheduler]`, 'color: blue', `正在使用 setTimeout(..., 0) 安排一个新的宏任务来执行工作...`);
+          
+          const task = {
+            id: Math.random(), // 随机一个ID作为预约凭证
+            callback: callback,
+          };
+
+          setTimeout(() => {
+            console.log(`%c===== Step 3: 新的宏任务(Main Task)阶段 =====`, 'color: green; font-weight: bold');
+            console.log(`%c[Scheduler]`, 'color: blue', `时间到！浏览器开始执行预约好的工作...`);
+            callback();
+          }, 0);
+          
+          // 返回这个“预约凭证”
+          return task;
+        }
+      };
+
+
+      // ===== 3. 模拟 React 的核心 API 和内部函数 =====
+
+      // createRoot 和 createElement 就像你说的，返回硬编码对象
+      function createRoot(container) {
+        console.log("createRoot() called.");
+        return {
+          containerInfo: container,
+          pendingLanes: NoLane,
+          callbackNode: null,
+          callbackPriority: NoLane,
+        };
+      }
+
+      function createElement(type, props, children) {
+        console.log("createElement() called.");
+        return {
+          $$typeof: Symbol.for('react.element'),
+          type: type,
+          props: { children: children },
+        };
+      }
+      
+      // 这是我们探索的核心，root.render()
+      function render(element, rootInstance) {
+        console.log(`%c===== Step 1: 初始宏任务(Main Task)阶段 =====`, 'color: green; font-weight: bold');
+        console.log(`root.render() called. 开始调度流程...`);
+        // 1. 开始更新流程，传递 lane
+        scheduleUpdateOnFiber(rootInstance, ConcurrentLane);
+      }
+      
+      function scheduleUpdateOnFiber(root, lane) {
+        console.log(`scheduleUpdateOnFiber: 准备为 root 安排一个优先级为 ${lane} 的更新。`);
+
+        // 2. 标记 root 有待处理的工作 (State Change!)
+        console.log(`  markRootUpdated: root.pendingLanes 从 ${root.pendingLanes} ...`);
+        root.pendingLanes |= lane; // 按位或操作，点亮 lane
+        console.log(`  markRootUpdated: ...变为 ${root.pendingLanes}`);
+
+        // 3. 确保这个 root 被安排上日程
+        ensureRootIsScheduled(root);
+      }
+
+      function ensureRootIsScheduled(root) {
+        console.log(`ensureRootIsScheduled: 确保 root 被调度。`);
+        console.log(`  当前同步状态: pendingLanes=${root.pendingLanes}, callbackNode=${root.callbackNode}`);
+        
+        // 4. 使用微任务来安排下一步的调度决策
+        console.log(`  将使用 queueMicrotask 来安排下一步，以避免阻塞当前任务。`);
+        queueMicrotask(processRootScheduleInMicrotask);
+      }
+
+      function processRootScheduleInMicrotask() {
+        console.log(`%c===== Step 2: 微任务(Microtask)阶段 =====`, 'color: orange; font-weight: bold');
+        console.log(`processRootScheduleInMicrotask: 在微任务中开始处理调度决策...`);
+        
+        // 5. 在微任务中，调用真正的调度决策函数
+        scheduleTaskForRootDuringMicrotask(root);
+      }
+      
+      function scheduleTaskForRootDuringMicrotask(root) {
+        console.log(`scheduleTaskForRootDuringMicrotask: 这是调度的"中央控制室"。`);
+        
+        const lanesToSchedule = root.pendingLanes;
+        const existingCallback = root.callbackNode;
+
+        if (lanesToSchedule === NoLane) {
+          console.log(`  决策: 没有待办事项，无需调度。`);
+          return;
+        }
+
+        if (existingCallback !== null) {
+          console.log(`  决策: 已有预约，此处简化，先不处理。实际React会比较优先级。`);
+          return;
+        }
+        
+        console.log(`  决策: 发现有待办事项 (pendingLanes: ${lanesToSchedule})，且没有预约。需要创建一个新的预约。`);
+        
+        // 6. 调用 Scheduler 来真正地预约一个未来的任务
+        const newCallbackNode = Scheduler.scheduleCallback(
+          'NormalPriority', // 简化优先级
+          () => performWorkOnRoot(root) // 告诉Scheduler到时间了该干什么
+        );
+
+        // 7. 保存“预约凭证” (State Change!)
+        console.log(`  [State Change!] root 的状态已更新:`);
+        root.callbackNode = newCallbackNode;
+        root.callbackPriority = ConcurrentLane; // 简化处理
+        console.log(`    - callbackNode:`, root.callbackNode);
+        console.log(`    - callbackPriority:`, root.callbackPriority);
+      }
+
+      function performWorkOnRoot(root) {
+        console.log(`performWorkOnRoot: 真正开始渲染工作！创建虚拟DOM，diffing...`);
+        console.log(`  ...渲染 "Hello World!" 到页面上...`);
+        root.containerInfo.innerHTML = '<div>Hello World!</div>';
+
+        // 8. 工作完成，清除待办事项 (State Change!)
+        console.log(`  [State Change!] 工作完成，清除 lane ${ConcurrentLane}`);
+        console.log(`    - root.pendingLanes 从 ${root.pendingLanes} ...`);
+        root.pendingLanes &= ~ConcurrentLane; // 按位与和取反，熄灭 lane
+        console.log(`    - ...变为 ${root.pendingLanes}`);
+
+        // 清除预约信息
+        root.callbackNode = null;
+        root.callbackPriority = NoLane;
+        
+        console.log(`%c[流程结束]`, 'color: red; font-weight: bold', `root 的最终状态:`, root);
+      }
+
+
+      root = createRoot(document.getElementById('container'));
+      const div = createElement('div', null, 'Hello World!');
+      
+      render(div, root);
+
+      console.log(`初始宏任务(Main Task)同步代码执行完毕。`);
+      console.log(`请观察控制台，接下来将自动进入微任务和新的宏任务阶段。`);
+
+    </script>
+  </body>
+</html>

@@ -4,11 +4,24 @@
     <script type="module">
       import * as React from './react.development.js';
       import * as ReactDOMClient from './react-dom-client.development.js';
-      
-      const createRoot = ReactDOMClient.createRoot;
-      const root = createRoot(document.getElementById('container'));
-      const h1 = React.createElement('h1', null, 'Hello World!');
-      root.render(h1);
+
+      performance.mark('createRoot-start');
+      const root = ReactDOMClient.createRoot(document.getElementById('container'));
+      console.log("root", root)
+      performance.mark('createRoot-end');
+      performance.measure('⚛️ createRoot', 'createRoot-start', 'createRoot-end');
+
+      performance.mark('createElement-start');
+      const div = React.createElement('div', null, 'Hello World!');
+      console.log("div", div)
+      performance.mark('createElement-end');
+      performance.measure('⚛️ createElement', 'createElement-start', 'createElement-end');
+
+      performance.mark('render-start');
+      root.render(div);
+      performance.mark('render-end');
+      performance.measure('⚛️ root.render (trigger)', 'render-start', 'render-end');
+
     </script>
   </body>
 </html>

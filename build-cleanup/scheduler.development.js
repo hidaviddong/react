@@ -190,6 +190,7 @@ function flushWork(initialTime) {
   }
 }
 function workLoop(initialTime) {
+  console.log("workLoop")
   var currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
@@ -202,6 +203,7 @@ function workLoop(initialTime) {
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     var callback = currentTask.callback;
+    console.log("我们的callback",currentTask, callback)
     if (typeof callback === 'function') {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentTask.callback = null;
@@ -297,6 +299,7 @@ function unstable_wrapCallback(callback) {
   };
 }
 function unstable_scheduleCallback(priorityLevel, callback, options) {
+  console.log("Scheduler 阶段",priorityLevel,callback)
   var currentTime = getCurrentTime();
   var startTime;
   if (typeof options === 'object' && options !== null) {
@@ -421,6 +424,7 @@ function forceFrameRate(fps) {
   }
 }
 var performWorkUntilDeadline = function () {
+  console.log("performWorkUntilDeadline")
   {
     needsPaint = false;
   }
@@ -484,6 +488,7 @@ if (typeof localSetImmediate === 'function') {
 }
 function requestHostCallback() {
   if (!isMessageLoopRunning) {
+    console.log("requestHostCallback")
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();
   }
